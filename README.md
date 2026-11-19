@@ -2,11 +2,9 @@
 
 Turns a LinkedIn company page into Odoo contacts. You open a company page, confirm its domain, and the tool pulls known employee emails from Hunter, cleans and de-duplicates them, shows a preview, and creates the contacts you approve in Odoo.
 
-Demo video: _add link here_
-
 ## How it works
 
-![Architecture](Architecture and Workflow Diagram.png)
+![Architecture](docs/architecture.png)
 
 A Chrome extension reads the URL of the active LinkedIn tab and nothing else. It sends that URL, plus the domain you confirm, to a small FastAPI backend running on localhost. The backend starts Hermes in one-shot mode (`hermes -z`), and Hermes calls the `find_employees` MCP tool. That tool fetches the employees from Hunter, processes them, and saves the result in PostgreSQL under a run id. The backend then builds a dry-run preview for the dashboard.
 
