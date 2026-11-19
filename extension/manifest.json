@@ -1,0 +1,13 @@
+{
+  "manifest_version": 3,
+  "name": "Odoo LinkedIn Agent",
+  "version": "0.4.0",
+  "description": "Detect LinkedIn company URLs and open the local discovery dashboard. No LinkedIn page scraping.",
+  "action": {
+    "default_title": "Odoo LinkedIn Agent",
+    "default_popup": "popup.html"
+  },
+  "options_page": "options.html",
+  "permissions": ["activeTab", "storage"],
+  "host_permissions": ["http://127.0.0.1:8765/*"]
+}

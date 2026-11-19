@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Odoo LinkedIn Agent</title>
+    <link rel="stylesheet" href="shared.css" />
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <main class="popup">
+      <header class="popup-header">
+        <div>
+          <h1>Odoo LinkedIn Agent</h1>
+          <p id="page-kind" class="muted">Checking active tab…</p>
+        </div>
+        <div
+          id="conn-pill"
+          class="conn-pill"
+          role="status"
+          aria-live="polite"
+        >
+          Checking…
+        </div>
+      </header>
+
+      <div
+        id="status-bar"
+        class="status-bar"
+        data-state="idle"
+        aria-live="polite"
+      ></div>
+
+      <section id="panel-unsupported" class="panel hidden">
+        <p>
+          This tab is not a LinkedIn <strong>company</strong> page.
+        </p>
+        <p class="muted">
+          Open <code>linkedin.com/company/…</code> to start a discovery. Only
+          the tab URL is read — no page content is scraped.
+        </p>
+        <button id="btn-open-dashboard" type="button" class="text-link">
+          Open dashboard
+        </button>
+      </section>
+
+      <section id="panel-offline" class="panel hidden">
+        <p class="muted">
+          The extension talks only to the local backend. Start it, then retry.
+        </p>
+        <div class="cmd-row">
+          <pre id="offline-cmd"></pre>
+          <button id="btn-copy-cmd" type="button" class="secondary">Copy</button>
+        </div>
+        <div class="popup-actions">
+          <button id="btn-retry-health" type="button">Retry</button>
+          <button id="btn-open-options-offline" type="button" class="secondary">
+            Open Options
+          </button>
+        </div>
+      </section>
+
+      <section id="panel-token" class="panel hidden">
+        <p>
+          Pairing token not set. Paste
+          <code>EXTENSION_PAIRING_TOKEN</code> from your project
+          <code>.env</code>.
+        </p>
+        <button id="btn-open-options-token" type="button">Open Options</button>
+        <button id="btn-open-dashboard-token" type="button" class="text-link">
+          Open dashboard
+        </button>
+      </section>
+
+      <section id="panel-form" class="panel hidden">
+        <p class="page-tag">
+          <span class="badge accepted" aria-hidden="true">LinkedIn</span>
+          <span>Company page detected</span>
+        </p>
+        <form id="discover-form" novalidate>
+          <label class="field" for="company">
+            Company name
+            <span class="field-hint">From the page URL — edit if needed</span>
+            <input id="company" name="company" type="text" autocomplete="off" required />
+          </label>
+          <label class="field" for="domain">
+            Domain
+            <span class="field-hint">Confirm the company’s real website domain</span>
+            <input id="domain" name="domain" type="text" autocomplete="off" required />
+            <span id="domain-error" class="field-error hidden"></span>
+          </label>
+          <button id="btn-discover" type="submit">Discover employees</button>
+          <p class="credit-note muted">
+            Uses 1 Hunter credit. Nothing is imported until you approve.
+          </p>
+          <button id="btn-open-dashboard-form" type="button" class="text-link">
+            Open dashboard
+          </button>
+        </form>
+      </section>
+    </main>
+    <script type="module" src="popup.js"></script>
+  </body>
+</html>

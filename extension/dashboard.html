@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Odoo LinkedIn Agent</title>
+    <link rel="stylesheet" href="shared.css" />
+    <link rel="stylesheet" href="dashboard.css" />
+  </head>
+  <body>
+    <div class="app">
+      <aside class="sidebar" aria-label="Run history">
+        <div class="brand">
+          <h1>Odoo LinkedIn Agent</h1>
+          <div id="conn-pill" class="conn-pill" role="status" aria-live="polite">
+            Checking…
+          </div>
+        </div>
+        <div class="sidebar-toolbar">
+          <button id="btn-refresh-runs" type="button" class="secondary block">
+            Refresh runs
+          </button>
+          <button id="btn-clear-history" type="button" class="text-link sidebar-clear">
+            Clear history
+          </button>
+        </div>
+        <div id="runs-list" class="runs-list" aria-label="Previous runs"></div>
+        <p id="runs-empty" class="empty-state hidden">
+          No runs yet. Open a LinkedIn company page and click the extension icon.
+        </p>
+        <button id="btn-show-more" type="button" class="secondary block hidden">
+          Show more
+        </button>
+      </aside>
+
+      <main class="main">
+        <header class="topbar">
+          <div class="topbar-copy">
+            <p id="phase-badge" class="badge idle">Idle</p>
+            <h2 id="page-title">Dashboard</h2>
+            <p id="page-subtitle" class="muted">
+              Restore a previous run or start discovery from the extension popup.
+            </p>
+            <div id="workflow-stepper" class="workflow-stepper" aria-live="polite"></div>
+            <div id="run-meta" class="run-meta hidden">
+              <span id="run-id-short" class="mono"></span>
+              <button id="btn-copy-run" type="button" class="secondary">Copy ID</button>
+            </div>
+          </div>
+          <div class="topbar-actions">
+            <button id="btn-open-options" type="button" class="secondary">Options</button>
+          </div>
+        </header>
+
+        <div
+          id="status-bar"
+          class="status-bar"
+          data-state="idle"
+          aria-live="polite"
+        ></div>
+
+        <section id="panel-offline" class="panel surface hidden">
+          <h3>Backend unavailable</h3>
+          <p class="muted">
+            Can't reach the local backend on <code>127.0.0.1:8765</code>.
+          </p>
+          <div class="cmd-row">
+            <pre id="offline-cmd"></pre>
+            <button id="btn-copy-cmd" type="button" class="secondary">Copy</button>
+          </div>
+          <button id="btn-retry-health" type="button">Retry</button>
+        </section>
+
+        <section id="panel-discover" class="panel surface hidden">
+          <h3>New discovery</h3>
+          <p class="muted">
+            Discovery calls Hermes/Hunter only when you click Discover.
+          </p>
+          <div class="form-grid">
+            <label class="field" for="company">
+              Company name
+              <span class="field-hint">Edit if the suggested name is wrong</span>
+              <input id="company" type="text" autocomplete="off" />
+            </label>
+            <label class="field" for="domain">
+              Domain
+              <span class="field-hint">Confirm the company’s real website domain</span>
+              <input id="domain" type="text" autocomplete="off" />
+              <span id="domain-error" class="field-error hidden"></span>
+            </label>
+          </div>
+          <p id="discover-url" class="muted"></p>
+          <p id="rate-limit-hint" class="muted hidden"></p>
+          <button id="btn-discover" type="button">Discover employees</button>
+          <p class="muted credit-note">
+            Uses Hunter credits. Nothing is written to Odoo until you approve.
+          </p>
+        </section>
+
+        <section id="panel-loading" class="panel surface hidden">
+          <h3>Discovery in progress</h3>
+          <div class="skeleton" aria-hidden="true">
+            <div class="skeleton-line" style="width: 70%"></div>
+            <div class="skeleton-line" style="width: 90%"></div>
+            <div class="skeleton-line" style="width: 55%"></div>
+          </div>
+          <p id="loading-detail" class="muted">Working…</p>
+        </section>
+
+        <section id="panel-preview" class="panel preview-panel hidden">
+          <div class="surface preview-body">
+            <div class="preview-header">
+              <div>
+                <h3>Contacts</h3>
+                <p id="filter-label" class="muted">All statuses</p>
+                <p id="showing-label" class="muted">Showing 0 of 0</p>
+              </div>
+              <div class="preview-tools">
+                <label class="field inline-field" for="record-search">
+                  Search
+                  <input id="record-search" type="text" autocomplete="off" placeholder="Name or email" />
+                </label>
+                <label class="field inline-field" for="record-sort">
+                  Sort
+                  <select id="record-sort">
+                    <option value="name:asc">Name A–Z</option>
+                    <option value="name:desc">Name Z–A</option>
+                    <option value="status:asc">Status A–Z</option>
+                    <option value="status:desc">Status Z–A</option>
+                  </select>
+                </label>
+              </div>
+            </div>
+            <div id="counts-row" class="counts-row" role="toolbar" aria-label="Status filters"></div>
+            <div id="records-list" class="records-list" aria-label="Contacts"></div>
+            <p id="records-empty" class="empty-state hidden">No contacts match this filter.</p>
+          </div>
+
+          <div id="action-bar" class="action-bar" aria-label="Import actions">
+            <div class="action-bar-main">
+              <p id="selection-count" class="selection-count">Selected 0 of 0 eligible</p>
+              <div class="selection-actions">
+                <button id="btn-select-all" type="button" class="secondary">
+                  Select all eligible
+                </button>
+                <button id="btn-deselect-all" type="button" class="secondary">
+                  Deselect all
+                </button>
+              </div>
+            </div>
+            <div id="approve-controls" class="approve-controls">
+              <button id="btn-approve" type="button">Approve import</button>
+            </div>
+            <div id="confirm-box" class="confirm-box hidden">
+              <p id="confirm-text"></p>
+              <div class="confirm-actions">
+                <button id="btn-confirm-cancel" type="button" class="secondary">Cancel</button>
+                <button id="btn-confirm-approve" type="button" class="danger">Confirm import</button>
+              </div>
+            </div>
+            <div id="import-result" class="import-result hidden" aria-live="polite"></div>
+          </div>
+        </section>
+
+        <section id="panel-report" class="panel surface hidden">
+          <div class="report-header">
+            <h3>Report</h3>
+            <div class="report-actions">
+              <button id="btn-download-csv" type="button" class="secondary">Download CSV</button>
+              <button id="btn-copy-summary" type="button" class="secondary">Copy summary</button>
+            </div>
+          </div>
+          <div id="report-meta" class="report-meta"></div>
+          <div id="report-bar" class="segmented-bar" aria-hidden="true"></div>
+          <div id="report-summary" class="stat-cards"></div>
+          <div id="report-body" class="report-sections"></div>
+        </section>
+
+        <section id="panel-empty" class="panel surface hidden">
+          <div class="empty-state">
+            No runs yet. Open a LinkedIn company page and click the extension icon.
+          </div>
+        </section>
+      </main>
+    </div>
+    <div id="toast-root" class="toast-root" aria-live="polite" role="status"></div>
+    <script type="module" src="dashboard.js"></script>
+  </body>
+</html>

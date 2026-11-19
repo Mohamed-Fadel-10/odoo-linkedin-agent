@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Odoo LinkedIn Agent Options</title>
+    <link rel="stylesheet" href="shared.css" />
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <main class="popup options-page">
+      <header class="popup-header">
+        <div>
+          <h1>Extension options</h1>
+          <p class="muted">Local pairing only — never sent to LinkedIn.</p>
+        </div>
+      </header>
+
+      <div
+        id="status-bar"
+        class="status-bar"
+        data-state="idle"
+        aria-live="polite"
+      ></div>
+
+      <section class="panel">
+        <label class="field" for="pairing-token">
+          Pairing token
+          <span class="field-hint">
+            Paste <code>EXTENSION_PAIRING_TOKEN</code> from the project
+            <code>.env</code>
+          </span>
+          <input id="pairing-token" type="password" autocomplete="off" />
+        </label>
+        <button id="save" type="button">Save</button>
+        <p class="muted">
+          Main review and import happen in the dashboard tab opened from the
+          extension popup.
+        </p>
+      </section>
+    </main>
+    <script type="module" src="options.js"></script>
+  </body>
+</html>

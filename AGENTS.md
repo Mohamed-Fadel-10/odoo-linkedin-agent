@@ -1,101 +1,80 @@
-# Project Rules
+# Project conventions
 
 ## 1. General
-- Use Python 3.14.
-- Use type hints for all functions and methods.
-- Use Pydantic for data models and input validation.
-- Use clear, simple, maintainable code.
-- Avoid unnecessary abstractions, services, helpers, and overengineering.
-- Check dependency compatibility with Python 3.14 before installation.
+- Python 3.14.
+- Type hints on functions and methods.
+- Pydantic for models and input validation.
+- Prefer simple, readable code over extra layers.
+- Check that new dependencies support Python 3.14 before adding them.
 
-## 2. Data Sources
-- Never scrape LinkedIn or access its restricted data.
+## 2. Data sources
+- Do not scrape LinkedIn or pull restricted LinkedIn data.
 - Allowed sources in this version: Hunter API and local CSV files.
-- Hunter is a company-domain contact data provider, not a guaranteed current-employee directory.
-- A valid email does not prove that a person currently works for the company.
-- Never fabricate missing employee information.
-- Preserve source details and source dates whenever available.
-- Keep missing optional fields as None.
-- Do not spend Hunter API credits during tests.
-- Use saved, sanitized fixtures for automated tests.
+- Hunter gives domain contact data; it does not guarantee someone still works there.
+- A valid email is not proof of current employment.
+- Do not invent missing employee fields.
+- Keep source details and dates when the provider sends them.
+- Leave missing optional fields as `None`.
 
 ## 3. Architecture
-- Providers must implement a common interface.
-- CSV is the primary development and testing provider.
-- Hunter is the external data provider.
-- Business logic belongs in the pipeline, not in AI prompts.
-- Normalization, validation, mapping, and deduplication must be deterministic.
-- All Odoo API calls must live inside `odoo/client.py`.
-- MCP tools must be thin wrappers over existing pipeline functions.
-- Hermes manages workflow decisions; it must not implement business logic.
-- Keep the MCP interface limited to the three approved tools:
+- Providers share a common interface.
+- CSV is the main provider during development; Hunter is the live external source.
+- Keep business rules in the pipeline, not in Hermes prompts.
+- Normalization, validation, mapping, and deduplication should be plain deterministic code.
+- All Odoo API traffic goes through `odoo/client.py`.
+- MCP tools are thin wrappers around existing pipeline functions.
+- Hermes handles conversation flow only; it should not reimplement processing or import logic.
+- MCP surface is limited to:
   - `find_employees`
   - `import_contacts`
   - `get_report`
 
-## 4. Data Processing
-- Process every record independently.
-- One failing record must not stop the remaining records.
-- Normalize and validate data before importing.
-- A valid email is required to create a contact.
-- Phone and location are optional.
-- Normalize email addresses and LinkedIn URLs before comparison.
-- Deduplicate using email, then LinkedIn URL.
-- Name plus company is a possible duplicate and requires review.
-- Do not update or delete existing Odoo contacts automatically.
+## 4. Data processing
+- Handle each record on its own; one failure must not stop the rest.
+- Normalize and validate before import.
+- Email is required to create a contact; phone and location are optional.
+- Normalize emails and LinkedIn URLs before comparing them.
+- Deduplicate by email first, then LinkedIn URL.
+- Same name + company is a possible duplicate and needs review.
+- Do not auto-update or auto-delete existing Odoo contacts.
 - Report every skipped or failed record with a clear reason.
 
-## 5. Odoo Integration
-- Keep all Odoo communication inside `odoo/client.py`.
-- Use the API supported by the actual Odoo version.
+## 5. Odoo
+- Keep Odoo calls inside `odoo/client.py`.
+- Use the API that matches the installed Odoo version.
 - Use least-privilege credentials.
-- Find an existing company before creating a new one.
-- Use valid Odoo record IDs for relational fields such as `parent_id` and `country_id`.
-- Do not expose arbitrary Odoo RPC execution through MCP.
-- Do not add update or delete operations in the first version.
+- Look up an existing company before creating a new one.
+- Relational fields (`parent_id`, `country_id`, …) must use real Odoo IDs.
+- Do not expose raw Odoo RPC through MCP.
+- First version is create-only (no update/delete tools).
 
-## 6. Import Safety
-- Dry-run must never write to Odoo.
-- Every real import requires explicit user approval.
-- Approval must be tied to a specific `run_id` and selected records.
-- Use a saved execution snapshot so preview and import operate on the same data.
-- Reject unknown or already processed selections.
-- Repeated runs must be idempotent.
-- Prevent concurrent imports from creating duplicate contacts.
-- Never infer approval from a previous dry-run.
+## 6. Import safety
+- Dry-run must not write to Odoo.
+- Real import needs explicit user approval for a specific `run_id` and selected records.
+- Preview and import must use the same saved run snapshot.
+- Reject unknown or already-processed selections.
+- Re-runs should be idempotent.
+- Serialize concurrent imports for the same run so duplicates are not created.
+- A previous dry-run alone is not approval.
 
 ## 7. MCP and Hermes
-- MCP tools must validate their inputs.
-- Never expose Odoo credentials or API keys to Hermes.
-- Never include secrets in tool outputs, prompts, or logs.
-- Hermes must show the preview before requesting approval.
-- Hermes must not perform a real import without explicit approval.
-- Handle errors clearly and do not retry indefinitely.
+- Validate MCP tool inputs.
+- Do not send Odoo credentials or API keys to Hermes.
+- Do not put secrets in tool outputs, prompts, or logs.
+- Show the preview before asking for approval.
+- Do not run a real import without explicit approval.
+- Surface errors clearly; avoid endless retries.
 
-## 8. Security and Configuration
-- Store local secrets in `.env` only.
-- Commit `.env.example` with placeholder values only.
-- Add `.env`, virtual environments, caches, logs, and local databases to `.gitignore`.
-- Never commit real API keys or real personal contact data.
-- Sanitize fixtures before committing them.
+## 8. Security and config
+- Local secrets live in `.env` only.
+- Commit `.env.example` with placeholders.
+- Ignore `.env`, venvs, caches, logs, and local DBs in git.
+- Do not commit real API keys or real personal contact data.
 - Validate external URLs and inputs.
-- Do not log authentication headers or secret values.
+- Do not log auth headers or secret values.
 
-## 9. Testing
-- Use pytest.
-- Test normalization, validation, deduplication, mapping, providers, and runner behavior.
-- Mock external API and Odoo calls in unit tests.
-- Automated tests must not consume Hunter credits.
-- Use fake data for tests.
-- Run only relevant tests during each phase.
-
-## 10. Development Workflow
-- Work phase by phase.
-- Do not start a new phase before the current phase's Done when condition is met.
-- Review the existing project and environment before installing or changing tools.
-- Do not reinstall working tools unnecessarily.
-- Keep changes within the current phase scope.
-- Do not modify existing Hermes global configuration or unrelated MCP servers without a clear reason.
-- Commit at the end of every completed phase.
-- Explain completed work and verification results briefly.
-- Do not claim a phase is complete unless its Done when condition is satisfied.
+## 9. Working on the repo
+- Finish the current scoped change before starting unrelated work.
+- Check what is already installed before adding tools.
+- Avoid changing Hermes global config or other MCP servers unless needed.
+- Keep commits focused; describe what changed and why.
