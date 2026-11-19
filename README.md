@@ -6,6 +6,7 @@ Turns a LinkedIn company page into Odoo contacts. You open a company page, confi
 
 ![Architecture](Architecture%20and%20Workflow%20Diagram.png)
 
+
 A Chrome extension reads the URL of the active LinkedIn tab and nothing else. It sends that URL, plus the domain you confirm, to a small FastAPI backend running on localhost. The backend starts Hermes in one-shot mode (`hermes -z`), and Hermes calls the `find_employees` MCP tool. That tool fetches the employees from Hunter, processes them, and saves the result in PostgreSQL under a run id. The backend then builds a dry-run preview for the dashboard.
 
 When you press Approve, the backend imports the selected contacts itself, in plain Python. Hermes is not in that step, so the model can never decide on its own to write to Odoo. The import uses a confirmation token tied to the run and the exact selected ids, and it only creates contacts; it never updates or deletes existing ones.
